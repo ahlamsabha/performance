@@ -1,0 +1,154 @@
+import React, { Component } from 'react'
+import * as am4core from "@amcharts/amcharts4/core";
+import * as am4charts from "@amcharts/amcharts4/charts";
+import am4themes_animated from "@amcharts/amcharts4/themes/animated";
+
+import SalesData from './SalesData';
+import axios from 'axios';
+
+
+export default class SurgeonPerformance extends Component {
+
+  state = {
+    data: {
+      datasets:
+      {
+        "surgeonName": "",
+        "principalOperativeProcedureTitle": "",
+        "count":0
+
+
+
+
+      },
+      datasource: []
+    }
+  }
+
+    componentDidMount() {
+      var labels = [];
+      var data = [];
+      var procedures = [];
+      axios.post("https://localhost:44343/api/OperationBooking/SurgeonProcedures", {})
+
+
+        .then((res) => {
+          console.log(res.data);
+
+          for (var propertyName in res.data) {
+
+            // console.log("index ", propertyName);
+            // console.log("count ", res.data.typeStatistics[propertyName]);
+            labels.push(propertyName);
+            data.push(res.data.count);
+            procedures.push(res.data.principalOperativeProcedureTitle);
+
+          }
+          console.log("labels ", labels)
+          console.log("data ", data)
+          console.log("procedures ", procedures)
+
+
+          this.setState({
+            data: {
+              "surgeonName": labels,
+              "count": data,
+              "principalOperativeProcedureTitle": procedures
+            }
+          })
+
+
+          var datasource = [];
+          for (var idx in data) {
+            datasource.push({ "surgeonName": labels[idx], "principalOperativeProcedureTitle": procedures[idx], "count": data[idx] });
+          }
+
+          console.log("MAP ", datasource);
+
+          // Add data
+          debugger;
+
+          am4core.useTheme(am4themes_animated);
+          // Themes end
+          let chart = am4core.create("SurgeonPerformance", am4charts.XYChart);
+
+
+        // Add data
+        chart.data = datasource;
+
+        // Create axes
+        let categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+        categoryAxis.renderer.grid.template.location = 0;
+        categoryAxis.renderer.ticks.template.disabled = true;
+        categoryAxis.renderer.line.opacity = 0;
+        categoryAxis.renderer.grid.template.disabled = true;
+        categoryAxis.renderer.minGridDistance = 40;
+        categoryAxis.dataFields.category = "surgeonName";
+        categoryAxis.startLocation = 0.4;
+        categoryAxis.endLocation = 0.6;
+        categoryAxis.title.text = "Surgeon Name"
+
+        let categoryAxis2 = chart.yAxes.push(new am4charts.CategoryAxis());
+        categoryAxis2.renderer.grid.template.location = 0;
+        categoryAxis2.renderer.ticks.template.disabled = true;
+        categoryAxis2.renderer.line.opacity = 0;
+        categoryAxis2.renderer.grid.template.disabled = true;
+        categoryAxis2.renderer.minGridDistance = 40;
+        categoryAxis2.dataFields.category = "principalOperativeProcedureTitle";
+        categoryAxis2.startLocation = 0.4;
+        categoryAxis2.endLocation = 0.6;
+        categoryAxis2.title.text = "procedures"
+
+        let valueAxis1 = chart.yAxes.push(new am4charts.ValueAxis());
+        valueAxis1.title.text = "count";
+        valueAxis1.renderer.opposite = true;
+        valueAxis1.renderer.grid.template.disabled = true;
+
+
+
+
+
+
+        // Create series
+
+
+        let lineSeries = chart.series.push(new am4charts.LineSeries());
+        lineSeries.dataFields.categoryX = "surgeonName";
+        lineSeries.dataFields.categoryY = "principalOperativeProcedureTitle";
+        lineSeries.dataFields.valueY = "count";
+        lineSeries.tooltipText = "count: {valueY.value}";
+        lineSeries.name = "Performance"
+        lineSeries.strokeWidth = 2;
+        lineSeries.minBulletDistance = 10;
+
+        let bullet = lineSeries.bullets.push(new am4charts.CircleBullet());
+        // bullet.circle.radius = 6;
+        bullet.circle.fill = am4core.color("#fff");
+        // bullet.circle.strokeWidth = 3;
+
+
+        chart.cursor = new am4charts.XYCursor();
+        chart.cursor.behavior = "panX";
+        chart.cursor.lineX.opacity = 0;
+        chart.cursor.lineY.opacity = 0;
+
+        chart.scrollbarX = new am4core.Scrollbar();
+        chart.scrollbarX.parent = chart.bottomAxesContainer;
+
+        this.chart = chart;
+
+
+
+        this.chart = chart;
+    })
+  }
+
+
+    render() {
+        return (
+            <div>
+                <div id="SurgeonPerformance" style={{ width: "100%", height: "500px" }}></div>
+            </div>
+        )
+    }
+}
